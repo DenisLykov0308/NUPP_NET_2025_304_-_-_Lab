@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="FoodDelivery.Common/FoodDelivery.Common.csproj" Id="e3767c2a-998d-4de3-9b46-4777b3fd00ea" />
+  <Project Path="FoodDelivery.Console/FoodDelivery.Console.csproj" Id="61915d2d-8040-4e67-9ac3-4cd58c22b228" />
+</Solution>
