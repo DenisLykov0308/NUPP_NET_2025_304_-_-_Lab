@@ -1,42 +1,50 @@
-﻿using FoodDelivery.Common;
+﻿using System.Text.Json;
+using FoodDelivery.Common;
 
-Console.WriteLine("=== CRUD demo: FoodDelivery ===");
+Console.WriteLine("=== Lab2: Parallel create + stats + save ===");
 
-var service = new InMemoryCrudService<Order>();
+var service = new InMemoryCrudService<Courier>();
 
-var order1 = new Order();
-var order2 = new Order();
-order2.ChangeStatus("In delivery");
+const int total = 1000;
 
-service.Create(order1);
-service.Create(order2);
-
-Console.WriteLine("\nCREATE: Додано 2 замовлення");
-
-Console.WriteLine("\nREADALL: Список замовлень:");
-foreach (var order in service.ReadAll())
+Parallel.For(0, total, i =>
 {
-    Console.WriteLine($"- Id: {order.Id} | CreatedAt: {order.CreatedAt} | Status: {order.Status}");
-}
+    var courier = Courier.CreateNew();
 
-Console.WriteLine("\nREAD: Отримуємо перше замовлення:");
-var readOrder = service.Read(order1.Id);
-Console.WriteLine($"Знайдено: {readOrder.Id} | Status: {readOrder.Status}");
+    courier.Rating = Random.Shared.NextDouble() * 5.0;     
+    courier.IsAvailable = Random.Shared.Next(0, 2) == 1;     
+    courier.TransportType = (i % 3) switch
+    {
+        0 => "Bike",
+        1 => "Car",
+        _ => "Foot"
+    };
 
-Console.WriteLine("\nUPDATE: Змінюємо статус першого замовлення на Delivered");
-readOrder.ChangeStatus("Delivered");
-service.Update(readOrder);
+    service.Create(courier);
+});
 
-Console.WriteLine($"Після оновлення: {service.Read(order1.Id).Status}");
+Console.WriteLine($"CREATE (Parallel): Додано {service.ReadAll().Count()} кур'єрів");
 
-Console.WriteLine("\nREMOVE: Видаляємо друге замовлення");
-service.Remove(order2);
+var couriers = service.ReadAll().ToList();
 
-Console.WriteLine("\nREADALL після видалення:");
-foreach (var order in service.ReadAll())
-{
-    Console.WriteLine($"- Id: {order.Id} | Status: {order.Status}");
-}
+var minRating = couriers.Min(c => c.Rating);
+var maxRating = couriers.Max(c => c.Rating);
+var avgRating = couriers.Average(c => c.Rating);
 
-Console.WriteLine("\n=== CRUD demo finished ===");
+var availableCount = couriers.Count(c => c.IsAvailable);
+
+Console.WriteLine("\n=== Stats (Courier.Rating) ===");
+Console.WriteLine($"Min: {minRating:F2}");
+Console.WriteLine($"Max: {maxRating:F2}");
+Console.WriteLine($"Avg: {avgRating:F2}");
+Console.WriteLine($"Available: {availableCount}/{couriers.Count}");
+
+var filePath = Path.Combine(AppContext.BaseDirectory, "data", "couriers.json");
+Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+
+var json = JsonSerializer.Serialize(couriers, new JsonSerializerOptions { WriteIndented = true });
+File.WriteAllText(filePath, json);
+
+Console.WriteLine($"\nSaved to file: {filePath}");
+Console.WriteLine("\n=== Done ===");
 Console.ReadKey();

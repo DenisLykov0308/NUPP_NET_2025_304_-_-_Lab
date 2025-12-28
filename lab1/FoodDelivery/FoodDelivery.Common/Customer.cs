@@ -2,12 +2,17 @@
 
 public class Customer : Person
 {
-    public string Address { get; set; }
-    public string Email { get; set; }
-    public DateTime RegisteredAt { get; set; }
+    public string Address { get; set; } = "";
 
-    public Customer()
+    public static Customer CreateNew()
     {
-        RegisteredAt = DateTime.Now;
+        return new Customer
+        {
+            Id = Guid.NewGuid(),
+            FullName = "Test Customer",
+            Phone = "+380000000000",
+            Email = "customer@test.com",
+            Address = "Kyiv"
+        };
     }
 }

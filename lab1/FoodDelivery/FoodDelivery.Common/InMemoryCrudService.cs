@@ -1,12 +1,14 @@
 ﻿using System.Collections.Concurrent;
+using System.Threading;
 
 namespace FoodDelivery.Common;
 
 public class InMemoryCrudService<T> : ICrudService<T>
     where T : class, IEntity
 {
-
     private static readonly ConcurrentDictionary<Guid, T> Storage;
+    private static readonly object _lock = new();
+    private static int _createdCount;
 
     static InMemoryCrudService()
     {
@@ -19,6 +21,13 @@ public class InMemoryCrudService<T> : ICrudService<T>
             element.Id = Guid.NewGuid();
 
         Storage[element.Id] = element;
+
+        Interlocked.Increment(ref _createdCount);
+
+        lock (_lock)
+        {
+           
+        }
     }
 
     public T Read(Guid id)
@@ -40,4 +49,6 @@ public class InMemoryCrudService<T> : ICrudService<T>
     {
         Storage.TryRemove(element.Id, out _);
     }
+
+    public int GetCreatedCount() => _createdCount;
 }
